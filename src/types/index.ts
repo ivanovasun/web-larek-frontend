@@ -30,10 +30,10 @@ getCardById(cardId: string): ICards;
 }
 
 //Функционал работы корзины - интерфейс модели данных
-export interface IBusketData {
+export interface IBasketData {
 deletCard(cardId: string): void;
 addCardInBusket(cardID: string):void;
-listOfCards: TBusketList[];
+listOfCards: TBasketList[];
 }
 
 //Действия, которые может производить пользователь в форме заказа - интерфейс модели данных
@@ -47,7 +47,7 @@ chooseEmailPhone(data:TEmailPhone): void;
 export type TCardList = Pick<ICards,  'image' | 'title'| 'category' | 'price'>;
 
 // Данные для отображения выбранных товаров в корзине
-export type TBusketList= Pick<ICards, 'title' | 'price' | 'id'>;
+export type TBasketList= Pick<ICards, 'title' | 'price' | 'id'>;
 
 // Данные пользователя: вид оплаты, адресс
 export type TAdressPayment = Pick<IUserInfo, 'paymentMethod' | 'address'>;
