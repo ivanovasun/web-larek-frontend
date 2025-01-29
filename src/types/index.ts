@@ -1,56 +1,65 @@
 // Карточки товаров
 export interface ICards {
-id: string;
-description: string;
-image: string;
-title: string;
-category: string;
-price: number;
-}
-
-// Информация о покупателе 
-export interface IUserInfo {
-paymentMethod: string;
-address: string;
-email: string;
-telephone: string;
+    id: string;
+    description?: string;
+    image?: string;
+    title: string;
+    category?: string;
+    price: number | null;
 }
 
 // Данные заказа
-export interface IOrder {
-id?: string;
-total: number;
+export interface IOrderForm {
+    payment: string;
+    email: string;
+    phone: string;
+    address: string;
+}
+
+//Данные заказа и пользователя
+export interface IOrder extends IOrderForm {
+    items: string[];
+    total: number;
+}
+
+export interface IOrderAnswer {
+    id: string;
+    total: number;
 }
 
 // Коллекция карточек, методы для работы с карточками - интерфейс модели данных
 export interface ICardsData {
-card: ICards[];
-preview: string | null; //место где хранится ид выбранной карточки
-getCardById(cardId: string): ICards;
+    card: ICards[];
+    preview: string | null; //место где хранится ид выбранной карточки
+    getCardById(cardId: string): ICards;
 }
 
 //Функционал работы корзины - интерфейс модели данных
 export interface IBasketData {
-deletCard(cardId: string): void;
-addCardInBusket(cardID: string):void;
-listOfCards: TBasketList[];
+    basketCard: TBasketList[];
+    deletCard(cardId: string, callback: Function | null): TBasketList[];
+    addCardInBasket(card: Partial<ICards>, callback: Function | null): TBasketList[];
+    countTotalAmount(card: TBasketList[]): number | null;
+    resetBasket(): void;
 }
 
 //Действия, которые может производить пользователь в форме заказа - интерфейс модели данных
-export interface UserInfoData { 
-resetData():void;
-choosePaymentAdress(data:TAdressPayment): void;
-chooseEmailPhone(data:TEmailPhone): void;
+export interface IOrderData {
+    addCardsInOrder(card: TBasketList[]): string[];
+    deletCardInOrder(cardId: string): string[];
+    clearAll(): void;
 }
 
-// Данные для отображения коллекции карточек на главной странице 
-export type TCardList = Pick<ICards,  'image' | 'title'| 'category' | 'price'>;
+//Данные для отображения коллекции карточек на главной странице 
+export type TCardList = Pick<ICards, 'image' | 'title' | 'category' | 'price'>;
 
-// Данные для отображения выбранных товаров в корзине
-export type TBasketList= Pick<ICards, 'title' | 'price' | 'id'>;
+//Данные для отображения выбранных товаров в корзине
+export type TBasketList = Pick<ICards, 'id' | 'price' | 'title'>;
 
-// Данные пользователя: вид оплаты, адресс
-export type TAdressPayment = Pick<IUserInfo, 'paymentMethod' | 'address'>;
+export type TPayment = 'cash' | 'card'
 
-// Данные пользователя: емейл, телефон
-export type TEmailPhone = Pick< IUserInfo, 'email' | 'telephone'>;
+export interface IApi {
+    getCards: () => Promise<ICards[]>;
+    getCardsById: (cardId: string) => Promise<ICards>;
+    setOrderInfo: (data: IOrder) => Promise<IOrderAnswer>;
+}
