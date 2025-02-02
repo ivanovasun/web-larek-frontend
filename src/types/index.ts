@@ -14,10 +14,13 @@ export interface IOrderForm {
     email: string;
     phone: string;
     address: string;
+    validEventOrder(): { valid: boolean, error: string };
+    validEventcontacts(): { valid: boolean, error: string };
+    clearAll(): void;
 }
 
 //Данные заказа и пользователя
-export interface IOrder extends IOrderForm {
+export interface IOrder extends Partial<IOrderForm> {
     items: string[];
     total: number;
 }
@@ -37,9 +40,9 @@ export interface ICardsData {
 //Функционал работы корзины - интерфейс модели данных
 export interface IBasketData {
     basketCard: TBasketList[];
-    deletCard(cardId: string, callback: Function | null): TBasketList[];
-    addCardInBasket(card: Partial<ICards>, callback: Function | null): TBasketList[];
-    countTotalAmount(card: TBasketList[]): number | null;
+    deletCard(cardId: string, callback: Function | null): void;
+    addCardInBasket(card: Partial<ICards>, callback: Function | null): void;
+    getTotalAmount(): number;
     resetBasket(): void;
 }
 

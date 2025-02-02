@@ -35,11 +35,12 @@ const basketTemplate: HTMLTemplateElement = document.querySelector('#basket');
 //создаем формы
 const contactsForm = new Form(cloneTemplate(contactsTemplate), events);
 const succesPage = new Success(cloneTemplate(succesTemplate), events);
+const basket = new Basket(cloneTemplate(basketTemplate), events);
 
 //получаем карточки с сервера
 api.getCards()
-    .then((CardsGallery) => {
-        cardsData.card = CardsGallery;
+    .then((cardsGallery) => {
+        cardsData.card = cardsGallery;
         events.emit('initialData: loaded');
     })
     .catch((err) => {
@@ -77,21 +78,19 @@ events.on('card:select', (event: { card: Card }) => {
 
 //добавляем карточку в корзину
 events.on('card:submit', (event: { card: Card }) => {
-    const { card } = event;
-    const cardSelect = cardsData.getCardById(card.id)
-    basketArray.addCardInBasket(cardSelect, null)
-    orderDara.addCardsInOrder(basketArray.basketCard);
+    const { card } = event; //в этой константе содержится разметка карточки из слоя отображения
+    const cardSelect = cardsData.getCardById(card.id) //в этой константе содержится наполнение карточки, взятое по id из модели данных
+    basketArray.addCardInBasket(cardSelect, null);
     return basketArray
 })
 
 function basketRender() {
-    const cardInBasket = basketArray.basketCard.map((card, index) => {
+    const cardsInBasket = basketArray.basketCard.map((card, index) => {
         const cardInstant = new Card(cloneTemplate(cardBasketTemplate), events);
         cardInstant.index = index += 1
         return cardInstant.render(card);
     })
-    const basket = new Basket(cloneTemplate(basketTemplate), events);
-    modalContainer.render({ catalog: basket.render({ items: cardInBasket, total: basketArray.countTotalAmount(basketArray.basketCard) }) })
+    modalContainer.render({ catalog: basket.render({ items: cardsInBasket, total: basketArray.getTotalAmount() }) })
 }
 
 //рендерим корзину
@@ -102,8 +101,7 @@ events.on('basket:open', () => {
 //удалаем карточку из корзины и перерендериваем корзину
 events.on('card:delete', (event: { card: Card }) => {
     const { card } = event;
-    basketArray.deletCard(card.id, null)
-    orderDara.deletCardInOrder(card.id);
+    basketArray.deletCard(card.id, null);
     basketRender();
 })
 
@@ -112,31 +110,15 @@ events.on('basket:changed', () => {
     page.counter = basketArray.basketCard.length;
 })
 
+
 //рендерим открытие формы заказа
 events.on('order-form: open', () => {
-    let checkValid = false
-    if (orderDara.payment && orderDara.address) {
-        checkValid = true;
-    }
-    modalContainer.render({
-        catalog: orderForm.render({
-            valid: checkValid, errors: ''
-        })
-    })
-    const totalNumber = basketArray.countTotalAmount(basketArray.basketCard);
-    orderDara.total = totalNumber;
+    modalContainer.render({ catalog: orderForm.render() });
 })
 
-//проверяем инпуты и сохраняем их значение в информации заказа
+//сохраняем  значение интупов в информации заказа
 events.on('order:input', (data: { valuesObject: Record<string, string> }) => {
     const { valuesObject } = data
-    if (valuesObject.address && orderDara.payment) {
-        orderForm.valid = true,
-            orderForm.errors = '';
-    } else {
-        orderForm.valid = false,
-            orderForm.errors = 'Необходимо заполнить адрес и выбрать способ оплаты';
-    }
     orderDara.address = valuesObject.address;
 }
 )
@@ -144,50 +126,48 @@ events.on('order:input', (data: { valuesObject: Record<string, string> }) => {
 //сохраняем способ оплаты 
 events.on('paymentmethod:selected', (data: { paymentmethod: string }) => {
     orderDara.payment = data.paymentmethod;
-    if (orderDara.address && orderDara.payment) {
-        orderForm.valid = true,
-            orderForm.errors = '';
-    }
+
+})
+
+//валидируем форму заказа при ее изменении - 1 страница
+events.on('order:changed', () => {
+    const validInfo = orderDara.validEventOrder();
+    orderForm.setvalid(validInfo.valid, validInfo.error);
 })
 
 //рендерим 2 страницу заказа - контактные данные
 events.on('order:submit', () => {
-    let checkValid = false
-    if (orderDara.email && orderDara.phone) {
-        checkValid = true;
-    }
     modalContainer.render({
-        catalog: contactsForm.render({
-            valid: checkValid, errors: ''
-        })
+        catalog: contactsForm.render()
     })
-
 })
 
-//проверяем инпуты и сохраняем их значение в информации заказа
+//сохраняем значение инпутов в информации заказа
 events.on('contacts:input', (data: { valuesObject: Record<string, string> }) => {
     const { valuesObject } = data
-    if (valuesObject.email && valuesObject.phone) {
-        contactsForm.valid = true,
-            contactsForm.errors = '';
-    } else {
-        contactsForm.valid = false,
-            contactsForm.errors = 'Необходимо заполнить все поля';
-    }
     orderDara.email = valuesObject.email;
     orderDara.phone = valuesObject.phone;
+})
+
+//валидируем форму заказа при ее изменении - 2 страница
+events.on('contacts:changed', () => {
+    const validInfo = orderDara.validEventcontacts()
+    contactsForm.setvalid(validInfo.valid, validInfo.error)
 })
 
 //отправляем данные заказа на сервер, рендерим модалку успешного заказа, обнуляем всю информацию, что необходимо
 events.on('contacts:submit', () => {
     let totalAmountFinall = 0
+    const cardsInOrder: string[] = []
+    //добавляем в заказ нужные id карточки из модели корзины
+    basketArray.basketCard.forEach((card) => cardsInOrder.push(card.id))
     api.setOrderInfo({
         payment: orderDara.payment,
         email: orderDara.email,
         phone: orderDara.phone,
         address: orderDara.address,
-        total: orderDara.total,
-        items: orderDara.items,
+        total: basketArray.getTotalAmount(),
+        items: cardsInOrder,
     })
         .then((answerOrder) => {
             totalAmountFinall = answerOrder.total

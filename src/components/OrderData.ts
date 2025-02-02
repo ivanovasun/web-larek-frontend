@@ -1,9 +1,7 @@
-import { IOrder, TBasketList } from "../types";
+import { IOrderForm } from "../types";
 import { IEvents } from "./base/events";
 
-export class OrderData implements IOrder {
-    protected _total: number;
-    protected _items: string[];
+export class OrderData implements IOrderForm {
     protected _payment: string;
     protected _email: string;
     protected _phone: string;
@@ -12,7 +10,6 @@ export class OrderData implements IOrder {
 
     constructor(events: IEvents) {
         this.events = events;
-        this._items = [];
     }
 
     set payment(data: string) {
@@ -45,35 +42,36 @@ export class OrderData implements IOrder {
         return this._address
     }
 
-    set total(data: number) {
-        this._total = data;
-    }
-    get total() {
-        return this._total
-    }
 
-    addCardsInOrder(card: TBasketList[]): string[] {
-
-        card.forEach((item) => {
-            if (!this._items.some((id) => item.id === id)) {
-                this._items.push(item.id)
-            }
-        })
-        return this._items
+    validEventOrder(): { valid: boolean, error: string } {
+        let valid
+        let error
+        if (this._address && this._payment) {
+            valid = true
+            error = ''
+            return { valid, error }
+        } else {
+            valid = false
+            error = 'Необходимо заполнить адрес и выбрать способ оплаты'
+            return { valid, error }
+        }
     }
 
-    deletCardInOrder(cardId: string): string[] {
-        this._items = this._items.filter(item => item !== cardId)
-        return this._items;
+    validEventcontacts(): { valid: boolean, error: string } {
+        let valid
+        let error
+        if (this._email && this._phone) {
+            valid = true
+            error = ''
+            return { valid, error }
+        } else {
+            valid = false
+            error = 'Необходимо заполнить все поля'
+            return { valid, error }
+        }
     }
 
-    get items() {
-        return this._items
-    }
-
-    clearAll() {
-        this._total = 0;
-        this._items = [];
+    clearAll(): void {
         this._payment = '';
         this._email = '';
         this._phone = '';

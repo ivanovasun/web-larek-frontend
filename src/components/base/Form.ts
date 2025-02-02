@@ -2,13 +2,7 @@ import { IOrderForm } from "../../types";
 import { Component } from "./Component";
 import { IEvents } from "./events";
 
-
-interface IFormState {
-    valid: boolean;
-    errors: string;
-}
-
-export class Form<IOrderForm> extends Component<IFormState> {
+export class Form extends Component<IOrderForm> {
     protected _submit: HTMLButtonElement;
     protected _errors: HTMLElement;
     protected inputs: NodeListOf<HTMLInputElement>;
@@ -35,11 +29,13 @@ export class Form<IOrderForm> extends Component<IFormState> {
                 valuesObject[element.name] = element.value;
             });
             this.events.emit(`${this.formName}:input`, { valuesObject });
+            this.events.emit(`${this.formName}:changed`);
         })
 
         this.container.addEventListener('submit', (e: Event) => {
             e.preventDefault();
             this.events.emit(`${this.formName}:submit`);
+            this.events.emit(`${this.formName}:changed`);
         })
 
         if (this.formName === 'order') {
@@ -59,17 +55,15 @@ export class Form<IOrderForm> extends Component<IFormState> {
                         paymentmethod = 'cash';
                     }
                     this.events.emit(`paymentmethod:selected`, { paymentmethod });
+                    this.events.emit(`${this.formName}:changed`)
                 }
             })
         }
     }
 
-    set valid(value: boolean) {
+    setvalid(value: boolean, error: string): void {
         this._submit.disabled = !value;
-    }
-
-    set errors(value: string) {
-        this._errors.textContent = value;
+        this._errors.textContent = error;
     }
 
     get form() {
@@ -88,12 +82,5 @@ export class Form<IOrderForm> extends Component<IFormState> {
                 this.BtnCash.classList.remove('button_alt-active');
             }
         }
-    }
-
-    render(state: Partial<IOrderForm> & IFormState) {
-        const { valid, errors, ...inputs } = state;
-        super.render({ valid, errors });
-        Object.assign(this, inputs);
-        return this.container;
     }
 }

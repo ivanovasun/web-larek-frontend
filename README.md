@@ -61,12 +61,15 @@ payment: string;
 email: string;
 phone: string;
 address: string;
+validEventOrder(): { valid: boolean, error: string };
+validEventcontacts(): { valid: boolean, error: string };
+clearAll(): void;
 }
 ```
 
 Данные заказа и пользователя
 ```
-export iinterface IOrder extends IOrderForm {
+export iinterface IOrder extends Partial<IOrderForm> {
 items: string[];
 total: number;
 }
@@ -159,7 +162,7 @@ export type TEmailPhone = Pick< IUserInfo, 'email' | 'telephone'>;
 В классе есть следующие методы:
 - deletCard(cardId: string, callback: Function | null): TBasketList[] - удаляет карточку товара из корзины, если передан колбэк, то исполняет его после удаления, если нет, то запускает событие изменения массива 
 - addCardInBasket(card: Partial<ICards>, callback: Function | null): TBasketList[] - добавляет карточку в корзину по ее id, выполняет колбэк после добавления, если передан, если не передан, то вызывает событие измененния массива
-- countTotalAmount(card: TBasketList[]): number | null - метод рассчета стоимости всех карточек товара, добавленных в корзину, возвращает null, когда добавлен бесценный товар
+- getTotalAmount(): number - метод возврата всей стоимости товара, возвращает значение, рассчитанное защищенным методом класса 
 - resetBasket() - сбрасывает список карточек, добавленных в корзину до пустого массива
 - геттеры для получения списка карточек, добавленных в корзину
 
@@ -170,13 +173,11 @@ export type TEmailPhone = Pick< IUserInfo, 'email' | 'telephone'>;
 - _address: string - введенный адрес пользователя
 - _email: string - введенный емейл пользователя
 - _telephone: string - введенный телефон пользователя
-- _items: string[] - массив id выбранных к заказу карточек
-- _total: number - общая цена заказа
 - events: IEvents - экземпляр класса `EventEmitter`, используется для запуска событий при изменении массива карточек, хранящихся в заказе
 
 В классе есть следующие методы:
-- addCardsInOrder(card: TBasketList[]): string[] - добавить id карточки в заказ, возращает массив из id выбранных для заказа картчек
-- deletCardInOrder(cardId: string): string[] - удалить id карточки из заказа, возращает обновленный массив из id выбранных для заказа картчек
+- validEventOrder(): { valid: boolean, error: string } - валидация полей заполнения заказа 1 страница
+- validEventcontacts(): { valid: boolean, error: string } - валидация полей заполнения заказа 2 страница
 - sclearAll() - очищает все поля класса
 - сеттеры и геттеры - для сохранения и получения данных заказа
 
@@ -265,8 +266,10 @@ export type TEmailPhone = Pick< IUserInfo, 'email' | 'telephone'>;
 - `order-form: open` - событие, генерируемое при нажатии кнопки "Оформить" в корзине 
 - `order:input` - ввод данных пользователем 
 - `paymentmethod:selected` - выбран способ оплаты
+- `order:changed` - изменение полей заказа: способ оплаты и адрес
 - `order:submit` - событие, отвечающее за статус (активная/не активная) кнопки "Далее" в модальном окне заказа: способ оплаты и адрес
 - `contacts:input` - ввод данных пользователем 
+- `contacts:changed`- изменений полей заказа: емейл и телефон
 - `contacts:submit` - событие, генерируемое при нажатии "Оплатить" в модальном окне заказа: емейл и телефон
 - `order-succes:close` - событие, генерируемое при нажатии "За новыми покупками!" в модальном окне успешного заказа
 - `modal:open` - модалка открыта

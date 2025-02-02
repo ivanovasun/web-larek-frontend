@@ -2,7 +2,6 @@ import { ICards } from "../types";
 import { Component } from "./base/Component";
 import { IEvents } from "./base/events";
 
-
 export class Card extends Component<ICards> {
     protected events: IEvents;
     protected deletBtn?: HTMLButtonElement;
@@ -31,7 +30,7 @@ export class Card extends Component<ICards> {
         if (this.container.classList.contains('card_full')) {
             this.buyBtn = this.container.querySelector('.card__button-buy');
             this.buyBtn.addEventListener('click', () =>
-                this.events.emit('card:submit', { card: this, isSelected: this.isSelected() })
+                this.events.emit('card:submit', { card: this, isSelected: this.checkBtnStatus() })
 
             );
         }
@@ -48,7 +47,7 @@ export class Card extends Component<ICards> {
         this.cardPrice = this.container.querySelector('.card__price');
     }
 
-    isSelected() {
+    checkBtnStatus() {
         this.buyBtn.classList.toggle('card__button-buy_inactive')
         if (this.buyBtn.classList.contains('card__button-buy_inactive')) {
             this.buyBtn.disabled = true;
@@ -89,6 +88,17 @@ export class Card extends Component<ICards> {
     set category(category: string) {
         if (this.cardCategory) {
             this.cardCategory.textContent = category
+            if (category === 'софт-скил') {
+                this.cardCategory.classList.add('card__category_soft');
+            } else if (category === 'другое') {
+                this.cardCategory.classList.add('card__category_other');
+            } else if (category === 'дополнительное') {
+                this.cardCategory.classList.add('card__category_additional');
+            } else if (category === 'кнопка') {
+                this.cardCategory.classList.add('card__category_button');
+            } else if (category === 'хард-скил') {
+                this.cardCategory.classList.add('card__category_hard');
+            }
         }
     }
 

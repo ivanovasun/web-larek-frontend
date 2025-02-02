@@ -4,13 +4,14 @@ import { IEvents } from "./base/events";
 export class BasketData implements IBasketData {
     protected _listOfCards: TBasketList[];
     protected events: IEvents;
+    protected fullPrice: number;
 
     constructor(events: IEvents) {
         this.events = events;
         this._listOfCards = []
     }
 
-    addCardInBasket(card: Partial<ICards>, callback: Function | null): TBasketList[] {
+    addCardInBasket(card: Partial<ICards>, callback: Function | null): void {
         if (!this._listOfCards.some((item) => item.id === card.id)) {
             this._listOfCards = [{ id: card.id, price: card.price, title: card.title }, ...this._listOfCards];
         }
@@ -20,11 +21,9 @@ export class BasketData implements IBasketData {
         } else {
             this.events.emit('basket:changed');
         }
-        
-        return this._listOfCards
     }
 
-    deletCard(cardId: string, callback: Function | null): TBasketList[] {
+    deletCard(cardId: string, callback: Function | null): void {
         this._listOfCards = this._listOfCards.filter((item) => item.id !== cardId);
 
         if (callback) {
@@ -32,20 +31,19 @@ export class BasketData implements IBasketData {
         } else {
             this.events.emit('basket:changed');
         }
-        return this._listOfCards
     }
 
-    countTotalAmount(card: TBasketList[]): number | null {
-        this._listOfCards = card
+    protected countTotalAmount(): number | null {
         let totalAmount = 0;
-        if (this._listOfCards.length !== 0) {
-            for (let i = 0; (this._listOfCards.length - 1) >= i; i++) {
-                totalAmount += this._listOfCards[i].price
-            }
-            return totalAmount;
-        } else {
-            return totalAmount
+        for (let i = 0; (this._listOfCards.length - 1) >= i; i++) {
+            totalAmount += this._listOfCards[i].price
         }
+        return totalAmount;
+    }
+
+    getTotalAmount(): number {
+        this.fullPrice = this.countTotalAmount()
+        return this.fullPrice
     }
 
     get basketCard() {
