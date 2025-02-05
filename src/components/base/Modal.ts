@@ -51,10 +51,4 @@ export class Modal extends Component<ICardsContainer> {
             this.renderContainer.replaceChildren(items)
         }
     }
-
-    render(data: ICardsContainer): HTMLElement {
-        super.render(data);
-        this.open();
-        return this.container
-    }
 }

@@ -46,11 +46,12 @@ export class BasketData implements IBasketData {
         return this.fullPrice
     }
 
-    get basketCard() {
+    get basketCards() {
         return this._listOfCards
     }
 
     resetBasket() {
         this._listOfCards = []
+        this.events.emit('basket:changed');
     }
 }

@@ -39,7 +39,7 @@ export interface ICardsData {
 
 //Функционал работы корзины - интерфейс модели данных
 export interface IBasketData {
-    basketCard: TBasketList[];
+    basketCards: TBasketList[];
     deletCard(cardId: string, callback: Function | null): void;
     addCardInBasket(card: Partial<ICards>, callback: Function | null): void;
     getTotalAmount(): number;

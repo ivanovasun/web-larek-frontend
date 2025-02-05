@@ -23,20 +23,20 @@ export class Card extends Component<ICards> {
         if (this.container.classList.contains('basket__item')) {
             this.deletBtn = this.container.querySelector('.basket__item-delete');
             this.deletBtn.addEventListener('click', () =>
-                this.events.emit('card:delete', { card: this })
+                this.events.emit('card:delete', { cardId: this.cardId})
             );
             this.cardIndex = this.container.querySelector('.basket__item-index');
         }
         if (this.container.classList.contains('card_full')) {
             this.buyBtn = this.container.querySelector('.card__button-buy');
             this.buyBtn.addEventListener('click', () =>
-                this.events.emit('card:submit', { card: this, isSelected: this.checkBtnStatus() })
+                this.events.emit('card:submit', { cardId: this.cardId, isSelected: this.checkBtnStatus() })
 
             );
         }
         if (this.container.classList.contains('gallery__item')) {
             this.container.addEventListener('click', () =>
-                this.events.emit('card:select', { card: this })
+                this.events.emit('card:select', { cardId: this.cardId})
             );
         }
 

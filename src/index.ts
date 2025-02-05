@@ -12,6 +12,7 @@ import { Page } from './components/Page';
 import { Form } from './components/base/Form';
 import { OrderData } from './components/OrderData';
 import { Success } from './components/Success';
+import { ICards } from './types';
 
 //создаем все классы
 const events = new EventEmitter();
@@ -57,14 +58,14 @@ events.on('initialData: loaded', () => {
 })
 
 //рендерим выбранную карточку в модалке
-events.on('card:select', (event: { card: Card }) => {
-    const { card } = event;
-    const imageSelect = cardsData.getCardById(card.id)
+events.on('card:select', (data: { cardId: string }) => {
+    const { cardId } = data
+    const imageSelect = cardsData.getCardById(cardId)
     const cardPreview = new Card(cloneTemplate(cardTemplateFull), events);
 
     //проверяем, что выбранная карточка не добавлена уже в корзину и устанавливаем состояние кнопки "В корзину"
-    basketArray.basketCard.forEach((item) => {
-        if (item.id === card.id) {
+    basketArray.basketCards.forEach((item) => {
+        if (item.id === cardId) {
             cardPreview.valid = false
         }
     })
@@ -74,40 +75,37 @@ events.on('card:select', (event: { card: Card }) => {
         cardPreview.valid = false
     }
     modalContainer.render({ catalog: cardPreview.render(imageSelect) })
+    modalContainer.open();
 })
 
 //добавляем карточку в корзину
-events.on('card:submit', (event: { card: Card }) => {
-    const { card } = event; //в этой константе содержится разметка карточки из слоя отображения
-    const cardSelect = cardsData.getCardById(card.id) //в этой константе содержится наполнение карточки, взятое по id из модели данных
+events.on('card:submit', (data: { cardId: string }) => {
+    const { cardId } = data;
+    const cardSelect = cardsData.getCardById(cardId)
     basketArray.addCardInBasket(cardSelect, null);
-    return basketArray
 })
 
-function basketRender() {
-    const cardsInBasket = basketArray.basketCard.map((card, index) => {
+//открываем корзину
+events.on('basket:open', () => {
+    modalContainer.render({ catalog: basket.render() });
+    modalContainer.open();
+})
+
+//удалаем карточку из корзины и перерендериваем корзину
+events.on('card:delete', (data: { cardId: string }) => {
+    const { cardId } = data;
+    basketArray.deletCard(cardId, null);
+})
+
+//пересчитываем количество товара в корзине при ее изменении и рендерим актуальную корзину
+events.on('basket:changed', () => {
+    page.counter = basketArray.basketCards.length;
+    const cardsInBasket = basketArray.basketCards.map((card, index) => {
         const cardInstant = new Card(cloneTemplate(cardBasketTemplate), events);
         cardInstant.index = index += 1
         return cardInstant.render(card);
     })
-    modalContainer.render({ catalog: basket.render({ items: cardsInBasket, total: basketArray.getTotalAmount() }) })
-}
-
-//рендерим корзину
-events.on('basket:open', () => {
-    basketRender();
-})
-
-//удалаем карточку из корзины и перерендериваем корзину
-events.on('card:delete', (event: { card: Card }) => {
-    const { card } = event;
-    basketArray.deletCard(card.id, null);
-    basketRender();
-})
-
-//пересчитываем количество товара в корзине при ее изменении
-events.on('basket:changed', () => {
-    page.counter = basketArray.basketCard.length;
+    basket.render({ items: cardsInBasket, total: basketArray.getTotalAmount() })
 })
 
 
@@ -160,7 +158,7 @@ events.on('contacts:submit', () => {
     let totalAmountFinall = 0
     const cardsInOrder: string[] = []
     //добавляем в заказ нужные id карточки из модели корзины
-    basketArray.basketCard.forEach((card) => cardsInOrder.push(card.id))
+    basketArray.basketCards.forEach((card) => cardsInOrder.push(card.id))
     api.setOrderInfo({
         payment: orderDara.payment,
         email: orderDara.email,
@@ -174,7 +172,7 @@ events.on('contacts:submit', () => {
             modalContainer.render({ catalog: succesPage.render({ total: totalAmountFinall }) })
             basketArray.resetBasket();
             orderDara.clearAll();
-            page.counter = basketArray.basketCard.length;
+            page.counter = basketArray.basketCards.length;
             orderForm.clearForm();
             contactsForm.clearForm();
         })
